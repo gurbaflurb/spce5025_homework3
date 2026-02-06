@@ -1,0 +1,8 @@
+keplarianElements:
+  ke1:
+    a: 7800000.0 #meters
+    e: 0.001
+    i: 98.6 #degrees
+    RAAN: 30.0 #degrees
+    aop: 40 #degrees
+    nu: 30.087853 #degrees
