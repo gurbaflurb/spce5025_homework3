@@ -14,7 +14,7 @@ def read_in_yaml(file_name):
         data = yaml.load(f.read(), Loader=yaml.SafeLoader)
         return data
 
-def convert_perifocal_to_eci(a, e, inclination, raan, aop, nu) -> tuple:
+def convert_arbitrary_perifocal_to_eci(a, e, inclination, raan, aop, nu) -> tuple:
         '''Converts manually provided perifocal values to ECI coordinates. Uses radians and not degrees. Passing in degrees will mess up the calculation'''
 
         # Hard coded because a nice solution for this exists (Pulled from slide 74)
@@ -23,6 +23,18 @@ def convert_perifocal_to_eci(a, e, inclination, raan, aop, nu) -> tuple:
         z = [ math.sin(inclination)*math.sin(aop), math.sin(inclination)*math.cos(aop), math.cos(inclination)]
 
         return (x, y, z)
+
+def find_arbitrary_position_and_velocity_vector(a: float, eccentricity: float, nu: float) -> tuple:
+    '''Returns a tuple in the form position_vector, velocity_vector'''
+    mu = 398600441800000.0 # From WGS84
+    
+    perifocal = a*(1.0-math.pow(eccentricity, 2))
+    radius = perifocal/(1.0 + eccentricity*math.cos(nu))
+
+    return ([radius*math.cos(nu), radius*math.sin(nu), 0.0],
+            [-math.sqrt(mu/perifocal)*math.sin(nu), math.sqrt(mu/perifocal)*(eccentricity+math.cos(nu)), 0.0])
+
+
 
 
 class KeplerianElements():
@@ -330,7 +342,6 @@ class KeplerianElements():
 
         return (x, y, z)
 
-
     def convert_perifocal_to_eci(self) -> tuple:
         '''Converts manually provided perifocal values to ECI coordinates. Uses radians and not degrees. Passing in degrees will mess up the calculation'''
 
@@ -347,32 +358,32 @@ def main():
     vectors_file = 'vectors.yaml'
     vector_data = read_in_yaml(vectors_file)
 
-    print(f'----- Vector 1 -----')
-    ke1 = KeplerianElements(vector_data['vectors'][f'vector1']['x_pos'],
-                               vector_data['vectors'][f'vector1']['y_pos'],
-                               vector_data['vectors'][f'vector1']['z_pos'],
-                               vector_data['vectors'][f'vector1']['x_velocity'],
-                               vector_data['vectors'][f'vector1']['y_velocity'],
-                               vector_data['vectors'][f'vector1']['z_velocity'])
+    # print(f'----- Vector 1 -----')
+    # ke1 = KeplerianElements(vector_data['vectors'][f'vector1']['x_pos'],
+    #                            vector_data['vectors'][f'vector1']['y_pos'],
+    #                            vector_data['vectors'][f'vector1']['z_pos'],
+    #                            vector_data['vectors'][f'vector1']['x_velocity'],
+    #                            vector_data['vectors'][f'vector1']['y_velocity'],
+    #                            vector_data['vectors'][f'vector1']['z_velocity'])
     
-    ke1.print_ke()
-    ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
-    print(f'U     {ke1_u}')
-    print(f'V     {ke1_v}')
-    print(f'W     {ke1_w}')
+    # ke1.print_ke()
+    # ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
+    # print(f'U     {ke1_u}')
+    # print(f'V     {ke1_v}')
+    # print(f'W     {ke1_w}')
 
-    print()
+    # print()
 
-    print(f'----- Vector 2 -----')
-    ke2 = KeplerianElements(vector_data['vectors'][f'vector2']['x_pos'],
-                               vector_data['vectors'][f'vector2']['y_pos'],
-                               vector_data['vectors'][f'vector2']['z_pos'],
-                               vector_data['vectors'][f'vector2']['x_velocity'],
-                               vector_data['vectors'][f'vector2']['y_velocity'],
-                               vector_data['vectors'][f'vector2']['z_velocity'])
-    ke2.print_ke()
+    # print(f'----- Vector 2 -----')
+    # ke2 = KeplerianElements(vector_data['vectors'][f'vector2']['x_pos'],
+    #                            vector_data['vectors'][f'vector2']['y_pos'],
+    #                            vector_data['vectors'][f'vector2']['z_pos'],
+    #                            vector_data['vectors'][f'vector2']['x_velocity'],
+    #                            vector_data['vectors'][f'vector2']['y_velocity'],
+    #                            vector_data['vectors'][f'vector2']['z_velocity'])
+    # ke2.print_ke()
 
-    print()
+    # print()
 
     ke_file = 'keplarian_elements.yaml'
     ke_data = read_in_yaml(ke_file)
@@ -391,12 +402,26 @@ def main():
     print(f'RAAN                   : {raan} radians')
     print(f'Argument of Periapsis  : {aop} radians')
     print(f'Nu                     : {nu} radians')
-    x, y, z = convert_perifocal_to_eci(a, e, i, raan, aop, nu)
+
+    x, y, z = convert_arbitrary_perifocal_to_eci(a, e, i, raan, aop, nu)
     print('ECI Coordinates:')
     print(f'X: {x}')
     print(f'Y: {y}')
     print(f'Z: {z}')
+
+    perifocal_vector, perifocal_velocity_vector = find_arbitrary_position_and_velocity_vector(a, e, nu)
+
+    print(f'Perifocal Position {perifocal_vector}')
+    print(f'Perifocal velocity {perifocal_velocity_vector}')
+
+    # Convert into proper matrix format
+    coordinates = np.matrix([x, y, z])
     
+    position = coordinates * np.matrix([perifocal_vector]).transpose()
+    velocity = coordinates * np.matrix([perifocal_velocity_vector]).transpose()
+    print(f'Position Vector: {position.transpose()}')
+    print(f'Velocity Vector: {velocity.transpose()}')
+
 
 
 

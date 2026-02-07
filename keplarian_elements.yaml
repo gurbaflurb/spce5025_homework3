@@ -4,5 +4,5 @@ keplarianElements:
     e: 0.001
     i: 98.6 #degrees
     RAAN: 30.0 #degrees
-    aop: 40 #degrees
-    nu: 30.087853 #degrees
+    aop: 40.0 #degrees
+    nu: 50.087853 #degrees
