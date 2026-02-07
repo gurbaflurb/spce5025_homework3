@@ -397,7 +397,7 @@ def main():
                                vector_data['vectors'][f'vector1']['y_velocity'],
                                vector_data['vectors'][f'vector1']['z_velocity'])
     
-    # ke1.print_ke()
+    ke1.print_ke()
     ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
     print(f'U     {ke1_u}')
     print(f'V     {ke1_v}')
@@ -421,7 +421,7 @@ def main():
                                vector_data['vectors'][f'vector2']['x_velocity'],
                                vector_data['vectors'][f'vector2']['y_velocity'],
                                vector_data['vectors'][f'vector2']['z_velocity'])
-    # ke2.print_ke()
+    ke2.print_ke()
     ke2_u, ke2_w, ke2_v = ke2.convert_coordinates_to_uvw()
     print(f'U     {ke2_u}')
     print(f'V     {ke2_v}')
