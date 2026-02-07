@@ -352,7 +352,7 @@ class KeplerianElements():
 
         return (x, y, z)
 
-    def rotate_about_x(self, uvw, angle):
+    def rotate_uvw_about_x(self, uvw, angle):
         '''Pass in the angle in degrees you would like to rotate your plane '''
         radian_angle = math.radians(angle)
 
@@ -362,7 +362,7 @@ class KeplerianElements():
 
         return np.dot(rotation_matrix, uvw)
     
-    def rotate_about_y(self, uvw, angle):
+    def rotate_uvw_about_y(self, uvw, angle):
         '''Pass in the angle in degrees you would like to rotate your plane '''
         radian_angle = math.radians(angle)
 
@@ -372,7 +372,7 @@ class KeplerianElements():
 
         return np.dot(rotation_matrix, uvw)
     
-    def rotate_about_z(self, uvw, angle):
+    def rotate_uvw_about_z(self, uvw, angle):
         '''Pass in the angle in degrees you would like to rotate your plane '''
         radian_angle = math.radians(angle)
 
@@ -403,7 +403,7 @@ def main():
     print(f'V     {ke1_v}')
     print(f'W     {ke1_w}')
 
-    rotated_matrix = ke1.rotate_about_x(np.matrix([ke1_u,
+    rotated_matrix = ke1.rotate_uvw_about_x(np.matrix([ke1_u,
                                                    ke1_v,
                                                    ke1_w]), 30)
     
@@ -427,7 +427,7 @@ def main():
     print(f'V     {ke2_v}')
     print(f'W     {ke2_w}')
 
-    rotated_matrix = ke2.rotate_about_x(np.matrix([ke2_u,
+    rotated_matrix = ke2.rotate_uvw_about_x(np.matrix([ke2_u,
                                                    ke2_v,
                                                    ke2_w]), 30)
     
