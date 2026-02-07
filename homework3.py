@@ -14,6 +14,16 @@ def read_in_yaml(file_name):
         data = yaml.load(f.read(), Loader=yaml.SafeLoader)
         return data
 
+def convert_perifocal_to_eci(a, e, inclination, raan, aop, nu) -> tuple:
+        '''Converts manually provided perifocal values to ECI coordinates. Uses radians and not degrees. Passing in degrees will mess up the calculation'''
+
+        # Hard coded because a nice solution for this exists (Pulled from slide 74)
+        x = [ math.cos(raan)*math.cos(aop) - math.sin(raan)*math.sin(aop)*math.cos(inclination), -math.cos(raan)*math.sin(aop) - math.sin(raan)*math.cos(aop)*math.cos(inclination), math.sin(raan)*math.sin(inclination)]
+        y = [ math.sin(raan)*math.cos(aop)+math.cos(raan)*math.sin(aop)*math.cos(inclination), -math.sin(raan)*math.sin(aop)+math.cos(raan)*math.cos(aop)*math.cos(inclination), -math.cos(raan)*math.sin(inclination)]
+        z = [ math.sin(inclination)*math.sin(aop), math.sin(inclination)*math.cos(aop), math.cos(inclination)]
+
+        return (x, y, z)
+
 
 class KeplerianElements():
     '''
@@ -276,9 +286,60 @@ class KeplerianElements():
         '''Determine the new position vector at a new delta-v'''
         return np.array(self.perifocal_positions) * f + np.array(self.velocity_components) * g
     
-    def convert_perifocal_to_eci(self):
-        pass
+    def convert_perifocal_to_equinoctial(self):
+        '''Converts the Keplarian Elements for a given orbit and returns a tuple with all the Equinoctial values'''
+        # Direct Set: 0 <= i < 180
+        if self.inclination >= 0 and self.inclination < 180:
+            semi_major_axis = self.semi_major_axis
+            h = self.eccentricity * math.sin(self.aop + self.nu)
+            k = self.eccentricity * math.cos(self.aop + self.nu)
+            p = math.tan(self.inclination/2) * math.sin(self.nu)
+            q = math.tan(self.inclination/2) * math.cos(self.nu)
 
+            # Lambda, but not a python lambda function
+            l = self.mean_anomaly + self.aop + self.nu
+
+
+
+        # Retrograde Set: 0 < i <= 180
+        elif self.inclination > 0 and self.inclination <= 180:
+            semi_major_axis = self.semi_major_axis
+            h = self.eccentricity * math.sin(self.aop - self.nu)
+            k = self.eccentricity * math.cos(self.aop - self.nu)
+            p = (1/math.tan(self.inclination/2)) * math.sin(self.nu)
+            q = (1/math.tan(self.inclination/2)) * math.cos(self.nu)
+
+            # Lambda, but not a python lambda function
+            l = self.mean_anomaly + self.aop - self.nu
+
+        return (semi_major_axis, h, k, p, q, l)
+
+    def convert_coordinates_to_uvw(self) -> tuple:
+        '''Convert given ECI coordinates (r_vector) and its cooresponding velocities (r_dot_vector) to UVW coordinates.'''
+        u = self.r_vector/np.linalg.norm(self.r_vector)
+        w = (np.cross(self.r_vector, self.r_dot_vector))/np.linalg.norm(np.linalg.cross(self.r_vector, self.r_dot_vector))
+        v = np.cross(w, u)
+
+        return (u, w, v)
+
+    def convert_coordinates_to_lvlh(self) -> tuple:
+        '''Convert given ECI coordinates (r_vector) and its cooresponding velocities (r_dot_vector) to LVLH coordinates.'''
+        z = (- self.r_vector)/np.linalg.norm(self.r_vector)
+        y = np.cross(self.r_dot_vector, self.r_vector)/np.linalg.norm(np.cross(self.r_dot_vector, self.r_vector))
+        x = np.cross(y, z)
+
+        return (x, y, z)
+
+
+    def convert_perifocal_to_eci(self) -> tuple:
+        '''Converts manually provided perifocal values to ECI coordinates. Uses radians and not degrees. Passing in degrees will mess up the calculation'''
+
+        # Hard coded because a nice solution for this exists (Pulled from slide 74)
+        x = [ math.cos(self.raan)*math.cos(self.aop) - math.sin(self.raan)*math.sin(self.aop)*math.cos(self.inclination), -math.cos(self.raan)*math.sin(self.aop) - math.sin(self.raan)*math.cos(self.aop)*math.cos(self.inclination), math.sin(self.raan)*math.sin(self.inclination)]
+        y = [ math.sin(self.raan)*math.cos(self.aop) + math.cos(self.raan)*math.sin(self.aop)*math.cos(self.inclination), -math.sin(self.raan)*math.sin(self.aop)+math.cos(self.raan)*math.cos(self.aop)*math.cos(self.inclination), -math.cos(self.raan)*math.sin(self.inclination)]
+        z = [ math.sin(self.inclination)*math.sin(self.aop), math.sin(self.inclination)*math.cos(self.aop), math.cos(self.inclination)]
+
+        return (x, y, z)
 
 
 def main():
@@ -295,7 +356,12 @@ def main():
                                vector_data['vectors'][f'vector1']['z_velocity'])
     
     ke1.print_ke()
+    ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
+    print(f'U     {ke1_u}')
+    print(f'V     {ke1_v}')
+    print(f'W     {ke1_w}')
 
+    print()
 
     print(f'----- Vector 2 -----')
     ke2 = KeplerianElements(vector_data['vectors'][f'vector2']['x_pos'],
@@ -304,10 +370,35 @@ def main():
                                vector_data['vectors'][f'vector2']['x_velocity'],
                                vector_data['vectors'][f'vector2']['y_velocity'],
                                vector_data['vectors'][f'vector2']['z_velocity'])
-    
     ke2.print_ke()
 
+    print()
+
+    ke_file = 'keplarian_elements.yaml'
+    ke_data = read_in_yaml(ke_file)
+
+    a = ke_data['keplarianElements']['ke1']['a']
+    e = ke_data['keplarianElements']['ke1']['e']
+    i = math.radians(ke_data['keplarianElements']['ke1']['i'])
+    raan = math.radians(ke_data['keplarianElements']['ke1']['RAAN'])
+    aop = math.radians(ke_data['keplarianElements']['ke1']['aop'])
+    nu = math.radians(ke_data['keplarianElements']['ke1']['nu'])
+
+    print('----- ECI position and Velocity from provided Keplarian elements -----')
+    print(f'Semi-Major Axis        : {a}')
+    print(f'Eccentricity           : {e}')
+    print(f'Inclination            : {i} radians')
+    print(f'RAAN                   : {raan} radians')
+    print(f'Argument of Periapsis  : {aop} radians')
+    print(f'Nu                     : {nu} radians')
+    x, y, z = convert_perifocal_to_eci(a, e, i, raan, aop, nu)
+    print('ECI Coordinates:')
+    print(f'X: {x}')
+    print(f'Y: {y}')
+    print(f'Z: {z}')
     
+
+
 
 if __name__ == '__main__':
     main()
