@@ -358,32 +358,32 @@ def main():
     vectors_file = 'vectors.yaml'
     vector_data = read_in_yaml(vectors_file)
 
-    # print(f'----- Vector 1 -----')
-    # ke1 = KeplerianElements(vector_data['vectors'][f'vector1']['x_pos'],
-    #                            vector_data['vectors'][f'vector1']['y_pos'],
-    #                            vector_data['vectors'][f'vector1']['z_pos'],
-    #                            vector_data['vectors'][f'vector1']['x_velocity'],
-    #                            vector_data['vectors'][f'vector1']['y_velocity'],
-    #                            vector_data['vectors'][f'vector1']['z_velocity'])
+    print(f'----- Vector 1 -----')
+    ke1 = KeplerianElements(vector_data['vectors'][f'vector1']['x_pos'],
+                               vector_data['vectors'][f'vector1']['y_pos'],
+                               vector_data['vectors'][f'vector1']['z_pos'],
+                               vector_data['vectors'][f'vector1']['x_velocity'],
+                               vector_data['vectors'][f'vector1']['y_velocity'],
+                               vector_data['vectors'][f'vector1']['z_velocity'])
     
-    # ke1.print_ke()
-    # ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
-    # print(f'U     {ke1_u}')
-    # print(f'V     {ke1_v}')
-    # print(f'W     {ke1_w}')
+    ke1.print_ke()
+    ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
+    print(f'U     {ke1_u}')
+    print(f'V     {ke1_v}')
+    print(f'W     {ke1_w}')
 
-    # print()
+    print()
 
-    # print(f'----- Vector 2 -----')
-    # ke2 = KeplerianElements(vector_data['vectors'][f'vector2']['x_pos'],
-    #                            vector_data['vectors'][f'vector2']['y_pos'],
-    #                            vector_data['vectors'][f'vector2']['z_pos'],
-    #                            vector_data['vectors'][f'vector2']['x_velocity'],
-    #                            vector_data['vectors'][f'vector2']['y_velocity'],
-    #                            vector_data['vectors'][f'vector2']['z_velocity'])
-    # ke2.print_ke()
+    print(f'----- Vector 2 -----')
+    ke2 = KeplerianElements(vector_data['vectors'][f'vector2']['x_pos'],
+                               vector_data['vectors'][f'vector2']['y_pos'],
+                               vector_data['vectors'][f'vector2']['z_pos'],
+                               vector_data['vectors'][f'vector2']['x_velocity'],
+                               vector_data['vectors'][f'vector2']['y_velocity'],
+                               vector_data['vectors'][f'vector2']['z_velocity'])
+    ke2.print_ke()
 
-    # print()
+    print()
 
     ke_file = 'keplarian_elements.yaml'
     ke_data = read_in_yaml(ke_file)
