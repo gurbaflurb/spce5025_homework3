@@ -54,7 +54,7 @@ class KeplerianElements():
 
         self.energy = self.determing_energy()
         
-        self.acceleration = self.determine_acceleration()
+        self.semi_major_axis = self.determine_semi_major_axis()
         
         self.orbital_period = self.determine_orbital_period()
         self.tp = self.orbital_period
@@ -83,15 +83,15 @@ class KeplerianElements():
         self.velocity_components = self.determine_velocity_components() 
 
 
-    def determine_acceleration(self):
+    def determine_semi_major_axis(self):
         return -(self.mu/(2 * self.energy))
 
     def determine_eccentricity(self):
         return np.linalg.norm(self.b_vector / self.mu)
 
     def determine_eccentricity_anomaly(self):
-        n_e = np.dot(self.r_vector, self.r_dot_vector)/math.sqrt(self.mu*self.acceleration)
-        d_e = 1 - (np.linalg.norm(self.r_vector)/self.acceleration)
+        n_e = np.dot(self.r_vector, self.r_dot_vector)/math.sqrt(self.mu*self.semi_major_axis)
+        d_e = 1 - (np.linalg.norm(self.r_vector)/self.semi_major_axis)
         r = math.atan2(n_e, d_e)
 
         if np.dot(self.r_vector, self.b_vector) < 0:
@@ -133,13 +133,13 @@ class KeplerianElements():
         return math.atan2(np.dot(self.h_vector/np.linalg.norm(self.h_vector), np.cross(self.n_hat, self.b_vector/np.linalg.norm(self.b_vector))), np.dot(self.n_hat, self.b_vector/np.linalg.norm(self.b_vector)))
 
     def determine_orbital_period(self):
-        return 2 * math.pi * math.sqrt((math.pow(self.acceleration, 3))/self.mu)
+        return 2 * math.pi * math.sqrt((math.pow(self.semi_major_axis, 3))/self.mu)
 
     def determine_apogee_radii(self):
-        return self.acceleration * (1 + self.energy)
+        return self.semi_major_axis * (1 + self.energy)
 
     def determine_perigee_radii(self):
-        return self.acceleration * (1 - self.energy)
+        return self.semi_major_axis * (1 - self.energy)
 
     def determing_energy(self):
         return (math.pow(np.linalg.norm(self.r_dot_vector), 2)/2) - (self.mu/np.linalg.norm(self.r_vector))
@@ -158,7 +158,7 @@ class KeplerianElements():
     def print_ke(self):
         print(f'Position Vector       : {self.r_vector}')
         print(f'Velocity Vector       : {self.r_dot_vector}')
-        print(f'Acceleration          : {self.acceleration} meters')
+        print(f'Semi-major Axis       : {self.semi_major_axis} meters')
         print(f'Eccentricity          : {self.eccentricity}')
         print(f'Inclination           : {math.degrees(self.inclination)} Degrees')
         print(f'RAAN                  : {math.degrees(self.raan)} Degress')
@@ -170,7 +170,7 @@ class KeplerianElements():
         print(f'Perigee Radii         : {self.perigee_radii} meters')
 
     def determine_mean_motion(self):
-        return math.sqrt(self.mu/math.pow(self.acceleration, 3))
+        return math.sqrt(self.mu/math.pow(self.semi_major_axis, 3))
 
     def determine_mean_anomaly(self):
         return self.eccentricity_anomaly - self.eccentricity * math.sin(self.eccentricity_anomaly)
@@ -191,7 +191,7 @@ class KeplerianElements():
         pt_1 = E_1 - self.eccentricity * math.sin(E_1)
         pt_2 = self.mean_anomaly
 
-        time_to_angle = math.sqrt(math.pow(self.acceleration, 3)/self.mu) * ((2 * math.pi * perigee_passes) + pt_1 - pt_2)
+        time_to_angle = math.sqrt(math.pow(self.semi_major_axis, 3)/self.mu) * ((2 * math.pi * perigee_passes) + pt_1 - pt_2)
 
         if time_to_angle < 0:
             time_to_angle = time_to_angle + 2 * math.pi
@@ -221,7 +221,7 @@ class KeplerianElements():
         return nu
 
     def determine_p(self):
-        return self.acceleration*(1-math.pow(self.eccentricity, 2))
+        return self.semi_major_axis*(1-math.pow(self.eccentricity, 2))
 
     def determine_perifocal_position(self) -> list:
         x = (np.linalg.norm(self.r_vector) * math.cos(self.nu)).item()
@@ -275,6 +275,9 @@ class KeplerianElements():
     def determine_new_position(self, f, g):
         '''Determine the new position vector at a new delta-v'''
         return np.array(self.perifocal_positions) * f + np.array(self.velocity_components) * g
+    
+    def convert_perifocal_to_eci(self):
+        pass
 
 
 
@@ -290,69 +293,8 @@ def main():
                                vector_data['vectors'][f'vector1']['x_velocity'],
                                vector_data['vectors'][f'vector1']['y_velocity'],
                                vector_data['vectors'][f'vector1']['z_velocity'])
-
+    
     ke1.print_ke()
-
-    print(f'E_0                           : {ke1.E0} Radians')
-    print(f'E_0                           : {math.degrees(ke1.E0)} Degrees')
-
-    print(f'v_0                           : {ke1.v0} Radians')
-    print(f'v_0                           : {math.degrees(ke1.v0)} Degrees')
-
-    print(f'Mean Motion (M)               : {ke1.mean_motion} radians')
-    print(f'Mean Motion (M)               : {math.degrees(ke1.mean_motion)} Degrees')
-
-    print(f'Mean Anomaly (n)              : {ke1.mean_anomaly}')
-    print(f'Mean Anomaly (n)              : {math.degrees(ke1.mean_anomaly)} Degrees')
-
-    print(f'Time of Flight from perigee   : {ke1.determine_time_of_flight(ke1.mean_anomaly)} seconds')
-
-    print(f'Eccentic angle at 65 degrees  : {ke1.determine_arbitrary_eccentric_anomaly(65)}')
-    print(f'Eccentic angle at 65 degrees  : {math.degrees(ke1.determine_arbitrary_eccentric_anomaly(65))} Degrees')
-
-    print(f'Time to 65 Degrees            : {ke1.determine_time_to_angle(65)} seconds')
-
-    time_to_angle_65, perigee_passes = ke1.determine_location_after_n_seconds(ke1.determine_time_to_angle(65), ke1.E0)
-    print(f'Newton-Raphson (EA)           : {time_to_angle_65} radians')
-    print(f'Newton-Raphson (EA)           : {math.degrees(time_to_angle_65)} Degrees')
-
-    true_anomaly_65 = ke1.determine_true_anomaly_from_eccentric_anomaly(time_to_angle_65)
-    print(f'Newton-Raphson (Nu)           : {true_anomaly_65} radians')
-    print(f'Newton-Raphson (Nu)           : {math.degrees(true_anomaly_65)} Degrees')
-
-    print()
-
-    loc_after_2700, perigee_passes = ke1.determine_location_after_n_seconds(2700, ke1.E0)
-    print(f'Location after 2700s (EA)       : {loc_after_2700} Radians')
-    print(f'Location after 2700s (EA)       : {math.degrees(loc_after_2700)} Degrees')
-    print(f'Perigee passes after 2700s (EA) : {perigee_passes}')
-
-    print(f'Location after 2700s (Nu)       : {ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_2700)} Radians')
-    print(f'Location after 2700s (Nu)       : {math.degrees(ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_2700))} Degrees')
-
-    print()
-
-    loc_after_2TP, perigee_passes = ke1.determine_location_after_n_seconds(2*ke1.tp, ke1.E0)
-    print(f'Location after 2 TP, E0       : {loc_after_2TP} radians')
-    print(f'Location after 2 TP, E0       : {math.degrees(loc_after_2TP)} Degrees')
-    print(f'Perigee passes after 2TP, E0  : {perigee_passes}')
-
-    print(f'Location after 2 TP, (Nu)     : {ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_2TP)} radians')
-    print(f'Location after 2 TP, (Nu)     : {math.degrees(ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_2TP))} Degrees')
-    print(f'Perigee passes after 2TP, (Nu): {perigee_passes}')
-
-    print()
-
-    loc_after_15000, perigee_passes = ke1.determine_location_after_n_seconds(15000, ke1.E0)
-    print(f'Location after 15000s, (EA)        : {loc_after_15000} Radians')
-    print(f'Location after 15000s, (EA)        : {math.degrees(loc_after_15000)} Degrees')
-    print(f'Perigee passes after 15000s, (EA)  : {perigee_passes}')
-
-    print(f'Location after 15000s, (Nu)        : {ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_15000)} Radians')
-    print(f'Location after 15000s, (Nu)        : {math.degrees(ke1.determine_true_anomaly_from_eccentric_anomaly(loc_after_15000))} Degrees')
-    print(f'Perigee passes after 15000s, (Nu)  : {perigee_passes}')
-    print()
-
 
 
     print(f'----- Vector 2 -----')
@@ -363,28 +305,8 @@ def main():
                                vector_data['vectors'][f'vector2']['y_velocity'],
                                vector_data['vectors'][f'vector2']['z_velocity'])
     
-    print('Keplarian Elements')
     ke2.print_ke()
 
-    print()
-
-    perifocal_components = ke2.determine_perifocal_position()
-    velocity_components = ke2.determine_velocity_components()
-    print(f'Perifocal Components    : {perifocal_components}')
-    print(f'Velocity Components     : {velocity_components}')
-
-    print()
-
-    print(f'p                       : {ke2.determine_p()}')
-    print(f'f                       : {ke2.determine_f(math.degrees(ke2.nu), 33)} radians')
-    print(f'g                       : {ke2.determine_g(math.degrees(ke2.nu), 33)} radians')
-    print(f'f_dot                   : {ke2.determine_f_dot(math.degrees(ke2.nu), 33)} radians')
-    print(f'g_dot                   : {ke2.determine_g_dot(33)} radians')
-
-    print()
-
-    print(f'r_arrow at delta-v     : {ke2.determine_new_position(ke2.determine_f(math.degrees(ke2.nu), 33), ke2.determine_g(math.degrees(ke2.nu), 33))}')
-    print(f'v_arrow at delta-v     : {ke2.determine_new_velocity(ke2.determine_f_dot(math.degrees(ke2.nu), 33), ke2.determine_g_dot(33))}')
     
 
 if __name__ == '__main__':
