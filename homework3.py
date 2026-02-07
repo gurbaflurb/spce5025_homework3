@@ -352,6 +352,37 @@ class KeplerianElements():
 
         return (x, y, z)
 
+    def rotate_about_x(self, uvw, angle):
+        '''Pass in the angle in degrees you would like to rotate your plane '''
+        radian_angle = math.radians(angle)
+
+        rotation_matrix = np.matrix([[1.0, 0.0, 0.0],
+                                     [0.0, math.cos(radian_angle), math.sin(radian_angle)],
+                                     [0.0, -math.sin(radian_angle), math.cos(radian_angle)]])
+
+        return np.dot(rotation_matrix, uvw)
+    
+    def rotate_about_y(self, uvw, angle):
+        '''Pass in the angle in degrees you would like to rotate your plane '''
+        radian_angle = math.radians(angle)
+
+        rotation_matrix = np.matrix([[math.cos(radian_angle), 0, -math.sin(radian_angle)],
+                                     [0, 1, 0],
+                                     [math.sin(radian_angle), 0, math.cos(radian_angle)]])
+
+        return np.dot(rotation_matrix, uvw)
+    
+    def rotate_about_z(self, uvw, angle):
+        '''Pass in the angle in degrees you would like to rotate your plane '''
+        radian_angle = math.radians(angle)
+
+        rotation_matrix = np.matrix([[math.cos(radian_angle), math.sin(radian_angle), 0],
+                                     [-math.sin(radian_angle), math.cos(radian_angle), 0],
+                                     [0, 0, 1]])
+
+        return np.dot(rotation_matrix, uvw)
+
+
 
 def main():
 
@@ -366,11 +397,20 @@ def main():
                                vector_data['vectors'][f'vector1']['y_velocity'],
                                vector_data['vectors'][f'vector1']['z_velocity'])
     
-    ke1.print_ke()
+    # ke1.print_ke()
     ke1_u, ke1_w, ke1_v = ke1.convert_coordinates_to_uvw()
     print(f'U     {ke1_u}')
     print(f'V     {ke1_v}')
     print(f'W     {ke1_w}')
+
+    rotated_matrix = ke1.rotate_about_x(np.matrix([ke1_u,
+                                                   ke1_v,
+                                                   ke1_w]), 30)
+    
+    print(f'Rotated 30 degree UVW coordinates:')
+    print(f'U     {rotated_matrix[0]}')
+    print(f'V     {rotated_matrix[1]}')
+    print(f'W     {rotated_matrix[2]}')
 
     print()
 
@@ -381,7 +421,20 @@ def main():
                                vector_data['vectors'][f'vector2']['x_velocity'],
                                vector_data['vectors'][f'vector2']['y_velocity'],
                                vector_data['vectors'][f'vector2']['z_velocity'])
-    ke2.print_ke()
+    # ke2.print_ke()
+    ke2_u, ke2_w, ke2_v = ke2.convert_coordinates_to_uvw()
+    print(f'U     {ke2_u}')
+    print(f'V     {ke2_v}')
+    print(f'W     {ke2_w}')
+
+    rotated_matrix = ke2.rotate_about_x(np.matrix([ke2_u,
+                                                   ke2_v,
+                                                   ke2_w]), 30)
+    
+    print(f'Rotated 30 degree UVW coordinates:')
+    print(f'U     {rotated_matrix[0]}')
+    print(f'V     {rotated_matrix[1]}')
+    print(f'W     {rotated_matrix[2]}')
 
     print()
 
